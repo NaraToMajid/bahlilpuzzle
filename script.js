@@ -810,17 +810,3 @@ window.addEventListener('resize', () => {
         loadPuzzle(`foto${currentLevel}.webp`, grid);
     }
 });
-
-// Pastikan fungsi-fungsi ini tersedia di global scope
-window.openLevels = openLevels;
-window.openLeaderboard = openLeaderboard;
-window.backMenu = backMenu;
-window.backToLevels = backToLevels;
-window.showLogin = showLogin;
-window.showRegister = showRegister;
-window.login = login;
-window.register = register;
-window.logout = logout;
-window.restartLevel = restartLevel;
-window.nextLevel = nextLevel;
-window.loadLeaderboard = loadLeaderboard;
