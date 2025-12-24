@@ -2,8 +2,8 @@
 const SUPABASE_URL = 'https://bxhrnnwfqlsoviysqcdw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aHJubndmcWxzb3ZpeXNxY2R3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3ODkzNDIsImV4cCI6MjA4MTM2NTM0Mn0.O7fpv0TrDd-8ZE3Z9B5zWyAuWROPis5GRnKMxmqncX8';
 
-// Deklarasikan variabel supabase tanpa langsung inisialisasi
-let supabase;
+// Gunakan nama yang berbeda untuk menghindari konflik
+let supabaseClient;
 
 // DOM Elements
 const menu = document.getElementById("menu");
@@ -40,11 +40,13 @@ let leaderboardEnabled = true;
 
 // Initialize App
 async function init() {
-    // Inisialisasi Supabase client
+    console.log('Initializing app...');
+    
+    // Inisialisasi Supabase client dengan nama yang berbeda
     try {
         if (window.supabase && window.supabase.createClient) {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            console.log('Supabase client initialized');
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log('Supabase client initialized as supabaseClient');
         } else {
             console.warn('Supabase library not loaded');
             leaderboardEnabled = false;
@@ -68,72 +70,116 @@ async function init() {
     }
     
     // Initialize leaderboard level select
-    for (let i = 1; i <= 12; i++) {
-        const option = document.createElement('option');
-        option.value = i;
-        option.textContent = `Level ${i}`;
-        leaderboardLevelSelect.appendChild(option);
+    if (leaderboardLevelSelect) {
+        for (let i = 1; i <= 12; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `Level ${i}`;
+            leaderboardLevelSelect.appendChild(option);
+        }
     }
     
     createLevelButtons();
     setupEventListeners();
-    
-    // Setup button event listeners
     setupButtonListeners();
     
     // Check database connection
     await checkDatabaseConnection();
     
+    // Prevent default touch behaviors
     document.addEventListener('touchmove', function(e) {
         if(e.target.closest('.level-grid')) return;
         e.preventDefault();
     }, { passive: false });
     
     document.addEventListener('contextmenu', e => e.preventDefault());
+    
+    console.log('App initialized successfully');
 }
 
-// Setup button event listeners
+// Setup button event listeners untuk menghandle onclick
 function setupButtonListeners() {
-    // Handle buttons with onclick attributes
-    const buttons = document.querySelectorAll('button[onclick]');
-    buttons.forEach(button => {
-        const onclickAttr = button.getAttribute('onclick');
-        // Remove the onclick attribute to prevent conflicts
-        button.removeAttribute('onclick');
-        
-        // Add event listener based on function name
-        if (onclickAttr.includes('openLevels()')) {
-            button.addEventListener('click', openLevels);
-        } else if (onclickAttr.includes('openLeaderboard()')) {
-            button.addEventListener('click', openLeaderboard);
-        } else if (onclickAttr.includes('backMenu()')) {
-            button.addEventListener('click', backMenu);
-        } else if (onclickAttr.includes('backToLevels()')) {
-            button.addEventListener('click', backToLevels);
-        } else if (onclickAttr.includes('showLogin()')) {
-            button.addEventListener('click', showLogin);
-        } else if (onclickAttr.includes('showRegister()')) {
-            button.addEventListener('click', showRegister);
-        } else if (onclickAttr.includes('login()')) {
-            button.addEventListener('click', login);
-        } else if (onclickAttr.includes('register()')) {
-            button.addEventListener('click', register);
-        } else if (onclickAttr.includes('logout()')) {
-            button.addEventListener('click', logout);
-        } else if (onclickAttr.includes('restartLevel()')) {
-            button.addEventListener('click', restartLevel);
-        } else if (onclickAttr.includes('nextLevel()')) {
-            button.addEventListener('click', nextLevel);
-        }
+    console.log('Setting up button listeners...');
+    
+    // Button: Mulai Game
+    const startBtn = document.querySelector('button[onclick*="openLevels"]');
+    if (startBtn) {
+        startBtn.onclick = openLevels;
+        console.log('Start button listener added');
+    }
+    
+    // Button: Leaderboard
+    const leaderboardBtn = document.querySelector('button[onclick*="openLeaderboard"]');
+    if (leaderboardBtn) {
+        leaderboardBtn.onclick = openLeaderboard;
+        console.log('Leaderboard button listener added');
+    }
+    
+    // Button: Kembali ke Menu
+    const backBtns = document.querySelectorAll('button[onclick*="backMenu"]');
+    backBtns.forEach(btn => {
+        btn.onclick = backMenu;
     });
+    
+    // Button: Kembali ke Levels
+    const backToLevelsBtn = document.querySelector('button[onclick*="backToLevels"]');
+    if (backToLevelsBtn) {
+        backToLevelsBtn.onclick = backToLevels;
+    }
+    
+    // Button: Login
+    const loginBtn = document.querySelector('button[onclick*="login()"]');
+    if (loginBtn) {
+        loginBtn.onclick = login;
+    }
+    
+    // Button: Register
+    const registerBtn = document.querySelector('button[onclick*="register()"]');
+    if (registerBtn) {
+        registerBtn.onclick = register;
+    }
+    
+    // Button: Show Login Form
+    const showLoginLinks = document.querySelectorAll('a[onclick*="showLogin()"]');
+    showLoginLinks.forEach(link => {
+        link.onclick = function(e) {
+            e.preventDefault();
+            showLogin();
+        };
+    });
+    
+    // Button: Show Register Form
+    const showRegisterLinks = document.querySelectorAll('a[onclick*="showRegister()"]');
+    showRegisterLinks.forEach(link => {
+        link.onclick = function(e) {
+            e.preventDefault();
+            showRegister();
+        };
+    });
+    
+    // Button: Logout
+    if (logoutBtn) {
+        logoutBtn.onclick = logout;
+    }
+    
+    // Button: Restart Level
+    const restartBtn = document.querySelector('button[onclick*="restartLevel()"]');
+    if (restartBtn) {
+        restartBtn.onclick = restartLevel;
+    }
+    
+    // Button: Next Level
+    if (nextBtn) {
+        nextBtn.onclick = nextLevel;
+    }
 }
 
 // Check database connection
 async function checkDatabaseConnection() {
-    if (!supabase || !leaderboardEnabled) return;
+    if (!supabaseClient || !leaderboardEnabled) return;
     
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('users')
             .select('count')
             .limit(1);
@@ -142,7 +188,7 @@ async function checkDatabaseConnection() {
             console.warn('Database tables not found. Leaderboard features disabled.');
             leaderboardEnabled = false;
             // Hide leaderboard button if tables don't exist
-            const leaderboardBtn = document.querySelector('[onclick="openLeaderboard()"]');
+            const leaderboardBtn = document.querySelector('button[onclick*="openLeaderboard"]');
             if (leaderboardBtn) {
                 leaderboardBtn.style.display = 'none';
             }
@@ -158,6 +204,8 @@ async function checkDatabaseConnection() {
 
 // UI Functions
 function createLevelButtons() {
+    if (!levelGrid) return;
+    
     levelGrid.innerHTML = '';
     for(let i = 1; i <= 12; i++) {
         const btn = document.createElement("button");
@@ -176,7 +224,7 @@ function createLevelButtons() {
             btn.innerHTML += `<br><small style="color:#888;font-size:11px;">Selesai</small>`;
         }
         
-        btn.addEventListener('click', () => startLevel(i));
+        btn.onclick = () => startLevel(i);
         levelGrid.appendChild(btn);
     }
 }
@@ -223,8 +271,9 @@ function updateUserUI() {
 
 // Navigation Functions
 function openLevels() {
-    menu.classList.add("hidden");
-    levelMenu.classList.remove("hidden");
+    console.log('Opening levels...');
+    if (menu) menu.classList.add("hidden");
+    if (levelMenu) levelMenu.classList.remove("hidden");
     
     document.querySelectorAll(".level-btn").forEach((btn, index) => {
         btn.classList.remove("current");
@@ -235,58 +284,68 @@ function openLevels() {
 }
 
 function backMenu() {
-    levelMenu.classList.add("hidden");
-    game.classList.add("hidden");
-    authContainer.classList.add("hidden");
-    leaderboardContainer.classList.add("hidden");
-    menu.classList.remove("hidden");
+    console.log('Going back to menu...');
+    if (levelMenu) levelMenu.classList.add("hidden");
+    if (game) game.classList.add("hidden");
+    if (authContainer) authContainer.classList.add("hidden");
+    if (leaderboardContainer) leaderboardContainer.classList.add("hidden");
+    if (menu) menu.classList.remove("hidden");
 }
 
 function backToLevels() {
+    console.log('Going back to levels...');
     clearInterval(interval);
-    game.classList.add("hidden");
-    levelMenu.classList.remove("hidden");
+    if (game) game.classList.add("hidden");
+    if (levelMenu) levelMenu.classList.remove("hidden");
     createLevelButtons();
 }
 
 function openLeaderboard() {
+    console.log('Opening leaderboard...');
     if (!currentUser) {
         // Show login/register first
-        menu.classList.add("hidden");
-        authContainer.classList.remove("hidden");
+        if (menu) menu.classList.add("hidden");
+        if (authContainer) authContainer.classList.remove("hidden");
         showLogin();
     } else {
         if (!leaderboardEnabled) {
             alert('Fitur leaderboard sedang tidak tersedia. Database belum diatur.');
             return;
         }
-        menu.classList.add("hidden");
-        leaderboardContainer.classList.remove("hidden");
+        if (menu) menu.classList.add("hidden");
+        if (leaderboardContainer) leaderboardContainer.classList.remove("hidden");
         loadLeaderboard();
     }
 }
 
 // Auth Functions
 function showLogin() {
-    loginForm.classList.remove("hidden");
-    registerForm.classList.add("hidden");
+    if (loginForm) loginForm.classList.remove("hidden");
+    if (registerForm) registerForm.classList.add("hidden");
+    
     // Clear form fields
-    document.getElementById("loginUsername").value = '';
-    document.getElementById("loginPassword").value = '';
+    const loginUsername = document.getElementById("loginUsername");
+    const loginPassword = document.getElementById("loginPassword");
+    if (loginUsername) loginUsername.value = '';
+    if (loginPassword) loginPassword.value = '';
 }
 
 function showRegister() {
-    loginForm.classList.add("hidden");
-    registerForm.classList.remove("hidden");
+    if (loginForm) loginForm.classList.add("hidden");
+    if (registerForm) registerForm.classList.remove("hidden");
+    
     // Clear form fields
-    document.getElementById("registerUsername").value = '';
-    document.getElementById("registerPassword").value = '';
-    document.getElementById("registerConfirmPassword").value = '';
+    const registerUsername = document.getElementById("registerUsername");
+    const registerPassword = document.getElementById("registerPassword");
+    const registerConfirmPassword = document.getElementById("registerConfirmPassword");
+    if (registerUsername) registerUsername.value = '';
+    if (registerPassword) registerPassword.value = '';
+    if (registerConfirmPassword) registerConfirmPassword.value = '';
 }
 
 async function login() {
-    const username = document.getElementById("loginUsername").value.trim();
-    const password = document.getElementById("loginPassword").value;
+    const username = document.getElementById("loginUsername")?.value.trim();
+    const password = document.getElementById("loginPassword")?.value;
     
     if (!username || !password) {
         alert("Harap isi username dan password");
@@ -295,7 +354,7 @@ async function login() {
     
     try {
         // Query user from Supabase
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('users')
             .select('*')
             .eq('username', username)
@@ -321,8 +380,8 @@ async function login() {
             localStorage.setItem('puzzleUser', JSON.stringify(currentUser));
             updateUserUI();
             
-            authContainer.classList.add("hidden");
-            leaderboardContainer.classList.remove("hidden");
+            if (authContainer) authContainer.classList.add("hidden");
+            if (leaderboardContainer) leaderboardContainer.classList.remove("hidden");
             loadLeaderboard();
         }
     } catch (error) {
@@ -332,9 +391,9 @@ async function login() {
 }
 
 async function register() {
-    const username = document.getElementById("registerUsername").value.trim();
-    const password = document.getElementById("registerPassword").value;
-    const confirmPassword = document.getElementById("registerConfirmPassword").value;
+    const username = document.getElementById("registerUsername")?.value.trim();
+    const password = document.getElementById("registerPassword")?.value;
+    const confirmPassword = document.getElementById("registerConfirmPassword")?.value;
     
     if (!username || !password || !confirmPassword) {
         alert("Harap isi semua field");
@@ -358,7 +417,7 @@ async function register() {
     
     try {
         // Check if username already exists
-        const { data: existingUser, error: checkError } = await supabase
+        const { data: existingUser, error: checkError } = await supabaseClient
             .from('users')
             .select('*')
             .eq('username', username)
@@ -370,7 +429,7 @@ async function register() {
         }
         
         // Insert new user
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('users')
             .insert([
                 {
@@ -398,8 +457,8 @@ async function register() {
             updateUserUI();
             
             alert("Pendaftaran berhasil! Anda telah login otomatis.");
-            authContainer.classList.add("hidden");
-            leaderboardContainer.classList.remove("hidden");
+            if (authContainer) authContainer.classList.add("hidden");
+            if (leaderboardContainer) leaderboardContainer.classList.remove("hidden");
             loadLeaderboard();
         }
     } catch (error) {
@@ -413,11 +472,13 @@ function logout() {
     localStorage.removeItem('puzzleUser');
     updateUserUI();
     backMenu();
-    showLogin(); // Show login form when returning to auth
+    showLogin();
 }
 
 // Leaderboard Functions
 async function loadLeaderboard() {
+    if (!leaderboardLevelSelect || !leaderboardList) return;
+    
     const level = leaderboardLevelSelect.value;
     
     if (!level) return;
@@ -425,7 +486,7 @@ async function loadLeaderboard() {
     leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">Memuat leaderboard...</div>';
     
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from(`leaderboard_level${level}`)
             .select('*')
             .order('time_seconds', { ascending: true })
@@ -480,7 +541,7 @@ async function submitScoreToLeaderboard(level, timeSeconds) {
     
     try {
         // Check if table exists first
-        const { error: tableError } = await supabase
+        const { error: tableError } = await supabaseClient
             .from(`leaderboard_level${level}`)
             .select('id')
             .limit(1);
@@ -491,7 +552,7 @@ async function submitScoreToLeaderboard(level, timeSeconds) {
         }
         
         // Check if user already has a score for this level
-        const { data: existingScore, error: checkError } = await supabase
+        const { data: existingScore, error: checkError } = await supabaseClient
             .from(`leaderboard_level${level}`)
             .select('*')
             .eq('user_id', currentUser.id)
@@ -499,7 +560,7 @@ async function submitScoreToLeaderboard(level, timeSeconds) {
         
         if (checkError && checkError.code === 'PGRST116') {
             // No existing score, insert new one
-            const { error: insertError } = await supabase
+            const { error: insertError } = await supabaseClient
                 .from(`leaderboard_level${level}`)
                 .insert([
                     {
@@ -518,7 +579,7 @@ async function submitScoreToLeaderboard(level, timeSeconds) {
         } else if (existingScore) {
             // Update if new time is better
             if (timeSeconds < existingScore.time_seconds) {
-                const { error: updateError } = await supabase
+                const { error: updateError } = await supabaseClient
                     .from(`leaderboard_level${level}`)
                     .update({
                         time_seconds: timeSeconds,
@@ -553,14 +614,16 @@ function startLevel(lvl) {
     else if (lvl <= 10) grid = 5;
     else grid = 6;
     
-    levelMenu.classList.add("hidden");
-    game.classList.remove("hidden");
+    if (levelMenu) levelMenu.classList.add("hidden");
+    if (game) game.classList.remove("hidden");
     
-    lvlText.textContent = lvl;
-    gridSizeText.textContent = `${grid}x${grid}`;
-    nextBtn.classList.add("hidden");
-    statusText.textContent = "Susun potongan gambar dengan benar!";
-    statusText.className = "";
+    if (lvlText) lvlText.textContent = lvl;
+    if (gridSizeText) gridSizeText.textContent = `${grid}x${grid}`;
+    if (nextBtn) nextBtn.classList.add("hidden");
+    if (statusText) {
+        statusText.textContent = "Susun potongan gambar dengan benar!";
+        statusText.className = "";
+    }
     
     startTimer();
     loadPuzzle(`foto${lvl}.webp`, grid);
@@ -569,15 +632,17 @@ function startLevel(lvl) {
 function startTimer() {
     clearInterval(interval);
     timer = 0;
-    timeText.textContent = 0;
+    if (timeText) timeText.textContent = 0;
     
     interval = setInterval(() => {
         timer++;
-        timeText.textContent = timer;
+        if (timeText) timeText.textContent = timer;
     }, 1000);
 }
 
 function loadPuzzle(img, grid) {
+    if (!puzzle) return;
+    
     puzzle.innerHTML = "";
     puzzle.style.gridTemplateColumns = `repeat(${grid}, 1fr)`;
     puzzle.style.gridTemplateRows = `repeat(${grid}, 1fr)`;
@@ -685,8 +750,10 @@ function checkWin() {
     
     if(isSolved) {
         clearInterval(interval);
-        statusText.textContent = `🎉 Terselesaikan dalam ${timer} detik!`;
-        statusText.className = "status-success";
+        if (statusText) {
+            statusText.textContent = `🎉 Terselesaikan dalam ${timer} detik!`;
+            statusText.className = "status-success";
+        }
         
         completedLevels.add(currentLevel);
         localStorage.setItem('puzzleCompletedLevels', JSON.stringify([...completedLevels]));
@@ -697,10 +764,14 @@ function checkWin() {
         }
         
         if(currentLevel < 12) {
-            nextBtn.classList.remove("hidden");
-            nextBtn.classList.add("pulse");
+            if (nextBtn) {
+                nextBtn.classList.remove("hidden");
+                nextBtn.classList.add("pulse");
+            }
         } else {
-            statusText.textContent += " 🏆 SELESAI SEMUA LEVEL!";
+            if (statusText) {
+                statusText.textContent += " 🏆 SELESAI SEMUA LEVEL!";
+            }
         }
         
         pieces.forEach(piece => piece.classList.add('correct'));
@@ -708,7 +779,7 @@ function checkWin() {
 }
 
 function nextLevel() {
-    nextBtn.classList.remove("pulse");
+    if (nextBtn) nextBtn.classList.remove("pulse");
     startLevel(currentLevel + 1);
 }
 
@@ -729,11 +800,27 @@ function formatTime(seconds) {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
-    init();
+    // DOM sudah siap, langsung init
+    setTimeout(init, 100);
 }
 
+// Handle window resize
 window.addEventListener('resize', () => {
-    if (!game.classList.contains('hidden')) {
+    if (game && !game.classList.contains('hidden')) {
         loadPuzzle(`foto${currentLevel}.webp`, grid);
     }
 });
+
+// Pastikan fungsi-fungsi ini tersedia di global scope
+window.openLevels = openLevels;
+window.openLeaderboard = openLeaderboard;
+window.backMenu = backMenu;
+window.backToLevels = backToLevels;
+window.showLogin = showLogin;
+window.showRegister = showRegister;
+window.login = login;
+window.register = register;
+window.logout = logout;
+window.restartLevel = restartLevel;
+window.nextLevel = nextLevel;
+window.loadLeaderboard = loadLeaderboard;
