@@ -1,11 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-    <script>
-    // Pastikan tidak ada duplikasi supabase
-    if (window.supabase) {
-        console.log('Supabase already loaded');
-    }
-</script>
 <head>
     <meta charset="UTF-8">
     <title>BAHLIL PUZZLE</title>
@@ -13,6 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- Load Supabase FIRST -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -28,10 +24,10 @@
         </div>
         <h1 class="game-title">BAHLIL PUZZLE</h1>
         <p class="game-subtitle">INTINYA PUZZLE JIGSAW GAMBAR BAHLIL ETANOL, LOVE BAHLIL</p>
-        <button class="btn btn-primary" onclick="openLevels()">
+        <button class="btn btn-primary" id="startBtn">
             <i class="fas fa-play-circle"></i> Mulai Game
         </button>
-        <button class="btn" onclick="openLeaderboard()" style="margin-top: 10px;">
+        <button class="btn" id="leaderboardBtn" style="margin-top: 10px;">
             <i class="fas fa-trophy"></i> Leaderboard
         </button>
     </div>
@@ -41,7 +37,7 @@
         <h2 class="section-title"><i class="fas fa-layer-group"></i> Pilih Level</h2>
         <div class="level-grid" id="levels"></div>
         <div class="level-menu-controls">
-            <button class="btn" onclick="backMenu()">
+            <button class="btn" id="backToMenuBtn">
                 <i class="fas fa-arrow-left"></i> Kembali ke Menu
             </button>
         </div>
@@ -59,9 +55,9 @@
                 <div class="input-group">
                     <input type="password" id="loginPassword" placeholder="Password" class="auth-input">
                 </div>
-                <button class="btn btn-primary" onclick="login()">Masuk</button>
+                <button class="btn btn-primary" id="loginBtn">Masuk</button>
                 <p style="margin-top: 15px; color: #aaa; text-align: center;">
-                    Belum punya akun? <a href="#" onclick="showRegister()" style="color: #fff;">Daftar di sini</a>
+                    Belum punya akun? <a href="#" id="showRegisterLink" style="color: #fff;">Daftar di sini</a>
                 </p>
             </div>
             
@@ -76,14 +72,14 @@
                 <div class="input-group">
                     <input type="password" id="registerConfirmPassword" placeholder="Konfirmasi Password" class="auth-input">
                 </div>
-                <button class="btn btn-primary" onclick="register()">Daftar</button>
+                <button class="btn btn-primary" id="registerBtn">Daftar</button>
                 <p style="margin-top: 15px; color: #aaa; text-align: center;">
-                    Sudah punya akun? <a href="#" onclick="showLogin()" style="color: #fff;">Masuk di sini</a>
+                    Sudah punya akun? <a href="#" id="showLoginLink" style="color: #fff;">Masuk di sini</a>
                 </p>
             </div>
             
             <div class="auth-controls">
-                <button class="btn" onclick="backMenu()">
+                <button class="btn" id="backFromAuthBtn">
                     <i class="fas fa-arrow-left"></i> Kembali ke Menu
                 </button>
             </div>
@@ -97,14 +93,14 @@
             <div class="leaderboard-info">
                 <div class="user-info" id="userInfo">
                     <span id="currentUser">Guest</span>
-                    <button class="btn btn-small" onclick="logout()" id="logoutBtn">Logout</button>
+                    <button class="btn btn-small" id="logoutBtn">Logout</button>
                 </div>
             </div>
         </div>
         
         <div class="level-selector">
             <label for="leaderboardLevel">Pilih Level:</label>
-            <select id="leaderboardLevel" class="level-select" onchange="loadLeaderboard()">
+            <select id="leaderboardLevel" class="level-select">
                 <!-- Options akan diisi oleh JavaScript -->
             </select>
         </div>
@@ -114,7 +110,7 @@
         </div>
         
         <div class="leaderboard-controls">
-            <button class="btn" onclick="backMenu()">
+            <button class="btn" id="backFromLeaderboardBtn">
                 <i class="fas fa-arrow-left"></i> Kembali ke Menu
             </button>
         </div>
@@ -140,7 +136,7 @@
             
             <div class="user-game-info">
                 <span id="gameUsername">Guest</span>
-                <button class="btn btn-small" onclick="backToLevels()">
+                <button class="btn btn-small" id="backToLevelsBtn">
                     <i class="fas fa-list"></i> Level Lain
                 </button>
             </div>
@@ -153,10 +149,10 @@
         <div id="status"></div>
         
         <div class="game-controls">
-            <button class="btn" onclick="restartLevel()">
+            <button class="btn" id="restartBtn">
                 <i class="fas fa-redo"></i> Ulangi Level
             </button>
-            <button id="nextBtn" class="btn btn-success hidden" onclick="nextLevel()">
+            <button id="nextBtn" class="btn btn-success hidden">
                 <i class="fas fa-arrow-right"></i> Level Berikutnya
             </button>
         </div>
@@ -167,7 +163,7 @@
     <source src="suara.mp3" type="audio/mpeg">
 </audio>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Load script.js LAST -->
 <script src="script.js"></script>
 </body>
 </html>
