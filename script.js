@@ -2,7 +2,8 @@
 const SUPABASE_URL = 'https://bxhrnnwfqlsoviysqcdw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aHJubndmcWxzb3ZpeXNxY2R3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3ODkzNDIsImV4cCI6MjA4MTM2NTM0Mn0.O7fpv0TrDd-8ZE3Z9B5zWyAuWROPis5GRnKMxmqncX8';
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Deklarasikan variabel supabase tanpa langsung inisialisasi
+let supabase;
 
 // DOM Elements
 const menu = document.getElementById("menu");
@@ -39,6 +40,20 @@ let leaderboardEnabled = true;
 
 // Initialize App
 async function init() {
+    // Inisialisasi Supabase client
+    try {
+        if (window.supabase && window.supabase.createClient) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log('Supabase client initialized');
+        } else {
+            console.warn('Supabase library not loaded');
+            leaderboardEnabled = false;
+        }
+    } catch (error) {
+        console.error('Error initializing Supabase:', error);
+        leaderboardEnabled = false;
+    }
+    
     // Check saved data
     const saved = localStorage.getItem('puzzleCompletedLevels');
     if (saved) {
@@ -63,6 +78,9 @@ async function init() {
     createLevelButtons();
     setupEventListeners();
     
+    // Setup button event listeners
+    setupButtonListeners();
+    
     // Check database connection
     await checkDatabaseConnection();
     
@@ -74,8 +92,46 @@ async function init() {
     document.addEventListener('contextmenu', e => e.preventDefault());
 }
 
+// Setup button event listeners
+function setupButtonListeners() {
+    // Handle buttons with onclick attributes
+    const buttons = document.querySelectorAll('button[onclick]');
+    buttons.forEach(button => {
+        const onclickAttr = button.getAttribute('onclick');
+        // Remove the onclick attribute to prevent conflicts
+        button.removeAttribute('onclick');
+        
+        // Add event listener based on function name
+        if (onclickAttr.includes('openLevels()')) {
+            button.addEventListener('click', openLevels);
+        } else if (onclickAttr.includes('openLeaderboard()')) {
+            button.addEventListener('click', openLeaderboard);
+        } else if (onclickAttr.includes('backMenu()')) {
+            button.addEventListener('click', backMenu);
+        } else if (onclickAttr.includes('backToLevels()')) {
+            button.addEventListener('click', backToLevels);
+        } else if (onclickAttr.includes('showLogin()')) {
+            button.addEventListener('click', showLogin);
+        } else if (onclickAttr.includes('showRegister()')) {
+            button.addEventListener('click', showRegister);
+        } else if (onclickAttr.includes('login()')) {
+            button.addEventListener('click', login);
+        } else if (onclickAttr.includes('register()')) {
+            button.addEventListener('click', register);
+        } else if (onclickAttr.includes('logout()')) {
+            button.addEventListener('click', logout);
+        } else if (onclickAttr.includes('restartLevel()')) {
+            button.addEventListener('click', restartLevel);
+        } else if (onclickAttr.includes('nextLevel()')) {
+            button.addEventListener('click', nextLevel);
+        }
+    });
+}
+
 // Check database connection
 async function checkDatabaseConnection() {
+    if (!supabase || !leaderboardEnabled) return;
+    
     try {
         const { data, error } = await supabase
             .from('users')
@@ -120,14 +176,23 @@ function createLevelButtons() {
             btn.innerHTML += `<br><small style="color:#888;font-size:11px;">Selesai</small>`;
         }
         
-        btn.onclick = () => startLevel(i);
+        btn.addEventListener('click', () => startLevel(i));
         levelGrid.appendChild(btn);
     }
 }
 
 function setupEventListeners() {
-    musicBtn.addEventListener('click', toggleMusic);
-    bgMusic.volume = 0.5;
+    if (musicBtn) {
+        musicBtn.addEventListener('click', toggleMusic);
+    }
+    if (bgMusic) {
+        bgMusic.volume = 0.5;
+    }
+    
+    // Add event listener for leaderboard level select
+    if (leaderboardLevelSelect) {
+        leaderboardLevelSelect.addEventListener('change', loadLeaderboard);
+    }
 }
 
 function toggleMusic() {
@@ -660,59 +725,13 @@ function formatTime(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-// Utility function untuk menampilkan notifikasi
-function showNotification(message, type = 'info') {
-    // Hapus notifikasi sebelumnya
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-    
-    // Buat elemen notifikasi
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = message;
-    
-    // Tambahkan styling
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#2ecc71' : type === 'error' ? '#e74c3c' : '#3498db'};
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        z-index: 10000;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        animation: slideIn 0.3s ease;
-        max-width: 300px;
-    `;
-    
-    // Tambahkan keyframes untuk animasi
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    document.body.appendChild(notification);
-    
-    // Hapus notifikasi setelah 3 detik
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
+// Initialize app
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
 }
 
-// Initialize app
-window.addEventListener('DOMContentLoaded', init);
 window.addEventListener('resize', () => {
     if (!game.classList.contains('hidden')) {
         loadPuzzle(`foto${currentLevel}.webp`, grid);
