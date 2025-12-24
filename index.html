@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- Load Supabase FIRST -->
+    <!-- Load Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -163,7 +163,37 @@
     <source src="suara.mp3" type="audio/mpeg">
 </audio>
 
-<!-- Load script.js LAST -->
+<!-- Load script.js -->
 <script src="script.js"></script>
+
+<!-- Fallback script untuk memastikan tombol berfungsi -->
+<script>
+    // Fallback jika ada masalah
+    setTimeout(function() {
+        console.log('Fallback script running...');
+        
+        // Cek jika tombol sudah punya event listener
+        const startBtn = document.getElementById('startBtn');
+        const leaderboardBtn = document.getElementById('leaderboardBtn');
+        
+        if (startBtn && !startBtn.onclick) {
+            console.log('Adding fallback listener to start button');
+            startBtn.onclick = function() {
+                console.log('Start button clicked (fallback)');
+                document.getElementById('menu').classList.add("hidden");
+                document.getElementById('levelMenu').classList.remove("hidden");
+            };
+        }
+        
+        if (leaderboardBtn && !leaderboardBtn.onclick) {
+            console.log('Adding fallback listener to leaderboard button');
+            leaderboardBtn.onclick = function() {
+                console.log('Leaderboard button clicked (fallback)');
+                document.getElementById('menu').classList.add("hidden");
+                document.getElementById('authContainer').classList.remove("hidden");
+            };
+        }
+    }, 2000);
+</script>
 </body>
 </html>
