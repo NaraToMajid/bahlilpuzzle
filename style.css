@@ -759,3 +759,32 @@ body {
         transform: none;
     }
 }
+
+/* Tambahkan di bagian bawah style.css */
+
+/* Debug styles untuk melihat jika elemen ada */
+.debug-border {
+    border: 2px solid red !important;
+}
+
+/* Pastikan tombol bisa diklik */
+.btn, button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Prevent text selection */
+* {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Input fields masih bisa dipilih */
+input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
