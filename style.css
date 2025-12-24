@@ -177,6 +177,14 @@ body {
     text-align: center;
 }
 
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 300px;
+}
+
 /* LEVEL MENU */
 #levelMenu {
     text-align: center;
@@ -336,7 +344,7 @@ body {
     gap: 15px;
 }
 
-.leaderboard-info {
+.leaderboard-user-info {
     display: flex;
     align-items: center;
     gap: 15px;
@@ -365,6 +373,7 @@ body {
 
 .level-selector label {
     font-weight: 500;
+    color: #fff;
 }
 
 .level-select {
@@ -378,6 +387,11 @@ body {
     cursor: pointer;
     flex: 1;
     max-width: 200px;
+}
+
+.level-select option {
+    background: #222;
+    color: #fff;
 }
 
 .leaderboard-content {
@@ -403,6 +417,7 @@ body {
 
 .leaderboard-item:last-child {
     border-bottom: none;
+    margin-bottom: 0;
 }
 
 .leaderboard-rank {
@@ -417,6 +432,7 @@ body {
     flex: 1;
     text-align: left;
     padding: 0 15px;
+    font-weight: 500;
 }
 
 .leaderboard-time {
@@ -463,6 +479,10 @@ body {
     display: flex;
     align-items: center;
     gap: 15px;
+    background: #1a1a1a;
+    padding: 8px 15px;
+    border-radius: 8px;
+    border: 1px solid #333;
 }
 
 .info-box {
@@ -600,6 +620,10 @@ body {
     
     #menu {
         padding: 20px 15px;
+    }
+    
+    .menu-buttons {
+        max-width: 280px;
     }
     
     .level-grid {
@@ -760,54 +784,46 @@ body {
     }
 }
 
-/* Tambahkan di bagian bawah style.css */
-
-/* Debug styles untuk melihat jika elemen ada */
-.debug-border {
-    border: 2px solid red !important;
+/* Error and loading states */
+.loading {
+    opacity: 0.7;
+    cursor: wait !important;
 }
 
-/* Pastikan tombol bisa diklik */
-.btn, button {
-    cursor: pointer !important;
-    pointer-events: auto !important;
+.error-message {
+    background: #ff6b6b;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    text-align: center;
 }
 
-/* Prevent text selection */
-* {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+.success-message {
+    background: #2ecc71;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    text-align: center;
 }
 
-/* Input fields masih bisa dipilih */
-input, textarea {
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-    user-select: text;
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
 }
 
-/* Debug styles */
-.debug-mode .btn {
-    border: 2px solid #00ff00 !important;
+::-webkit-scrollbar-track {
+    background: #222;
+    border-radius: 4px;
 }
 
-.debug-mode #menu {
-    border: 2px solid #ff0000 !important;
+::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
 }
 
-.debug-mode #levelMenu {
-    border: 2px solid #0000ff !important;
-}
-
-/* Click feedback */
-.btn:active {
-    transform: scale(0.95) !important;
-}
-
-/* Highlight active buttons */
-.btn:hover {
-    background: #444 !important;
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
