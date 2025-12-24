@@ -24,12 +24,14 @@
         </div>
         <h1 class="game-title">BAHLIL PUZZLE</h1>
         <p class="game-subtitle">INTINYA PUZZLE JIGSAW GAMBAR BAHLIL ETANOL, LOVE BAHLIL</p>
-        <button class="btn btn-primary" id="startBtn">
-            <i class="fas fa-play-circle"></i> Mulai Game
-        </button>
-        <button class="btn" id="leaderboardBtn" style="margin-top: 10px;">
-            <i class="fas fa-trophy"></i> Leaderboard
-        </button>
+        <div class="menu-buttons">
+            <button class="btn btn-primary" id="startBtn">
+                <i class="fas fa-play-circle"></i> Mulai Game
+            </button>
+            <button class="btn" id="leaderboardBtn">
+                <i class="fas fa-trophy"></i> Leaderboard
+            </button>
+        </div>
     </div>
 
     <!-- LEVEL SELECTION -->
@@ -47,6 +49,8 @@
     <div id="authContainer" class="hidden">
         <div id="authMenu">
             <h2 class="section-title"><i class="fas fa-user"></i> Masuk / Daftar</h2>
+            
+            <!-- Login Form -->
             <div class="auth-form" id="loginForm">
                 <h3>Masuk Akun</h3>
                 <div class="input-group">
@@ -61,6 +65,7 @@
                 </p>
             </div>
             
+            <!-- Register Form -->
             <div class="auth-form hidden" id="registerForm">
                 <h3>Daftar Akun Baru</h3>
                 <div class="input-group">
@@ -90,10 +95,10 @@
     <div id="leaderboardContainer" class="hidden">
         <div class="leaderboard-header">
             <h2 class="section-title"><i class="fas fa-trophy"></i> Leaderboard</h2>
-            <div class="leaderboard-info">
+            <div class="leaderboard-user-info">
                 <div class="user-info" id="userInfo">
                     <span id="currentUser">Guest</span>
-                    <button class="btn btn-small" id="logoutBtn">Logout</button>
+                    <button class="btn btn-small" id="logoutBtn" style="display: none;">Logout</button>
                 </div>
             </div>
         </div>
@@ -106,7 +111,9 @@
         </div>
         
         <div class="leaderboard-content">
-            <div id="leaderboardList"></div>
+            <div id="leaderboardList">
+                <!-- Leaderboard data akan dimuat di sini -->
+            </div>
         </div>
         
         <div class="leaderboard-controls">
@@ -166,34 +173,5 @@
 <!-- Load script.js -->
 <script src="script.js"></script>
 
-<!-- Fallback script untuk memastikan tombol berfungsi -->
-<script>
-    // Fallback jika ada masalah
-    setTimeout(function() {
-        console.log('Fallback script running...');
-        
-        // Cek jika tombol sudah punya event listener
-        const startBtn = document.getElementById('startBtn');
-        const leaderboardBtn = document.getElementById('leaderboardBtn');
-        
-        if (startBtn && !startBtn.onclick) {
-            console.log('Adding fallback listener to start button');
-            startBtn.onclick = function() {
-                console.log('Start button clicked (fallback)');
-                document.getElementById('menu').classList.add("hidden");
-                document.getElementById('levelMenu').classList.remove("hidden");
-            };
-        }
-        
-        if (leaderboardBtn && !leaderboardBtn.onclick) {
-            console.log('Adding fallback listener to leaderboard button');
-            leaderboardBtn.onclick = function() {
-                console.log('Leaderboard button clicked (fallback)');
-                document.getElementById('menu').classList.add("hidden");
-                document.getElementById('authContainer').classList.remove("hidden");
-            };
-        }
-    }, 2000);
-</script>
 </body>
 </html>
