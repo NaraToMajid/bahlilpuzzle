@@ -35,8 +35,15 @@ async function init() {
     // Setup event listeners untuk tombol
     setupButtonListeners();
     
+    // Initialize leaderboard dropdown
+    initLeaderboardDropdown();
+    
     // Check database connection
     await checkDatabaseConnection();
+    
+    // Set volume background music
+    const bgMusic = document.getElementById('bgMusic');
+    if (bgMusic) bgMusic.volume = 0.5;
     
     console.log('✅ App initialized successfully');
 }
@@ -81,6 +88,23 @@ function setupButtonListeners() {
     document.getElementById('leaderboardLevel')?.addEventListener('change', loadLeaderboard);
     
     console.log('✅ Button listeners setup complete');
+}
+
+// Initialize leaderboard dropdown
+function initLeaderboardDropdown() {
+    const leaderboardLevelSelect = document.getElementById('leaderboardLevel');
+    if (!leaderboardLevelSelect) return;
+    
+    // Clear existing options
+    leaderboardLevelSelect.innerHTML = '';
+    
+    // Add level options
+    for (let i = 1; i <= 12; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `Level ${i}`;
+        leaderboardLevelSelect.appendChild(option);
+    }
 }
 
 // Check database connection
@@ -144,11 +168,17 @@ function updateUserUI() {
     if (currentUser) {
         if (currentUserElement) currentUserElement.textContent = currentUser.username;
         if (gameUsernameElement) gameUsernameElement.textContent = currentUser.username;
-        if (logoutBtn) logoutBtn.classList.remove('hidden');
+        if (logoutBtn) {
+            logoutBtn.classList.remove('hidden');
+            logoutBtn.style.display = 'inline-block';
+        }
     } else {
         if (currentUserElement) currentUserElement.textContent = 'Guest';
         if (gameUsernameElement) gameUsernameElement.textContent = 'Guest';
-        if (logoutBtn) logoutBtn.classList.add('hidden');
+        if (logoutBtn) {
+            logoutBtn.classList.add('hidden');
+            logoutBtn.style.display = 'none';
+        }
     }
 }
 
@@ -179,56 +209,51 @@ function backToLevels() {
 
 function openLeaderboard() {
     console.log('🏆 Opening leaderboard...');
+    
+    // Jika belum login, tunjukkan form login dulu
     if (!currentUser) {
-        // Show login/register first
+        console.log('User not logged in, showing login form');
         document.getElementById('menu')?.classList.add("hidden");
         document.getElementById('authContainer')?.classList.remove("hidden");
         showLogin();
         return;
     }
     
+    // Jika leaderboard tidak enabled
     if (!leaderboardEnabled) {
         alert('Fitur leaderboard sedang tidak tersedia. Database belum diatur.');
         return;
     }
     
+    // Buka leaderboard
     document.getElementById('menu')?.classList.add("hidden");
     document.getElementById('leaderboardContainer')?.classList.remove("hidden");
+    
+    // Load data leaderboard untuk level 1 secara default
     loadLeaderboard();
 }
 
 // ========== AUTH FUNCTIONS ==========
 function showLogin() {
+    console.log('🔐 Showing login form');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     
     if (loginForm) loginForm.classList.remove("hidden");
     if (registerForm) registerForm.classList.add("hidden");
-    
-    // Clear form fields
-    const loginUsername = document.getElementById("loginUsername");
-    const loginPassword = document.getElementById("loginPassword");
-    if (loginUsername) loginUsername.value = '';
-    if (loginPassword) loginPassword.value = '';
 }
 
 function showRegister() {
+    console.log('📝 Showing register form');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     
     if (loginForm) loginForm.classList.add("hidden");
     if (registerForm) registerForm.classList.remove("hidden");
-    
-    // Clear form fields
-    const registerUsername = document.getElementById("registerUsername");
-    const registerPassword = document.getElementById("registerPassword");
-    const registerConfirmPassword = document.getElementById("registerConfirmPassword");
-    if (registerUsername) registerUsername.value = '';
-    if (registerPassword) registerPassword.value = '';
-    if (registerConfirmPassword) registerConfirmPassword.value = '';
 }
 
 async function login() {
+    console.log('Attempting login...');
     const username = document.getElementById("loginUsername")?.value.trim();
     const password = document.getElementById("loginPassword")?.value;
     
@@ -256,6 +281,7 @@ async function login() {
         }
         
         if (data) {
+            console.log('Login successful for user:', username);
             currentUser = {
                 id: data.id,
                 username: data.username
@@ -264,8 +290,11 @@ async function login() {
             localStorage.setItem('puzzleUser', JSON.stringify(currentUser));
             updateUserUI();
             
+            // Tutup auth container dan buka leaderboard
             document.getElementById('authContainer')?.classList.add("hidden");
             document.getElementById('leaderboardContainer')?.classList.remove("hidden");
+            
+            // Load leaderboard data
             loadLeaderboard();
         }
     } catch (error) {
@@ -275,6 +304,7 @@ async function login() {
 }
 
 async function register() {
+    console.log('Attempting registration...');
     const username = document.getElementById("registerUsername")?.value.trim();
     const password = document.getElementById("registerPassword")?.value;
     const confirmPassword = document.getElementById("registerConfirmPassword")?.value;
@@ -332,6 +362,7 @@ async function register() {
         }
         
         if (data) {
+            console.log('Registration successful for user:', username);
             currentUser = {
                 id: data.id,
                 username: data.username
@@ -341,8 +372,12 @@ async function register() {
             updateUserUI();
             
             alert("Pendaftaran berhasil! Anda telah login otomatis.");
+            
+            // Tutup auth container dan buka leaderboard
             document.getElementById('authContainer')?.classList.add("hidden");
             document.getElementById('leaderboardContainer')?.classList.remove("hidden");
+            
+            // Load leaderboard data
             loadLeaderboard();
         }
     } catch (error) {
@@ -352,23 +387,34 @@ async function register() {
 }
 
 function logout() {
+    console.log('Logging out...');
     currentUser = null;
     localStorage.removeItem('puzzleUser');
     updateUserUI();
     backMenu();
-    showLogin();
 }
 
 // ========== LEADERBOARD FUNCTIONS ==========
 async function loadLeaderboard() {
+    console.log('📊 Loading leaderboard...');
+    
     const leaderboardLevelSelect = document.getElementById('leaderboardLevel');
     const leaderboardList = document.getElementById('leaderboardList');
     
-    if (!leaderboardLevelSelect || !leaderboardList) return;
+    if (!leaderboardLevelSelect || !leaderboardList) {
+        console.error('Leaderboard elements not found');
+        return;
+    }
     
     const level = leaderboardLevelSelect.value;
-    if (!level) return;
+    if (!level) {
+        console.error('No level selected');
+        return;
+    }
     
+    console.log(`Loading leaderboard for level ${level}`);
+    
+    // Show loading message
     leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">Memuat leaderboard...</div>';
     
     try {
@@ -380,15 +426,35 @@ async function loadLeaderboard() {
         
         if (error) {
             console.error('Error loading leaderboard:', error);
-            leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Gagal memuat leaderboard</div>';
+            
+            if (error.message.includes('does not exist')) {
+                leaderboardList.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #888;">
+                        <i class="fas fa-trophy" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <p>Leaderboard untuk Level ${level} belum tersedia</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Selesaikan level ini untuk menjadi yang pertama!</p>
+                    </div>
+                `;
+            } else {
+                leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Gagal memuat leaderboard</div>';
+            }
             return;
         }
         
         if (!data || data.length === 0) {
-            leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">Belum ada data untuk level ini</div>';
+            leaderboardList.innerHTML = `
+                <div style="text-align: center; padding: 30px; color: #888;">
+                    <i class="fas fa-trophy" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p>Belum ada data untuk Level ${level}</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Jadilah yang pertama menyelesaikan level ini!</p>
+                </div>
+            `;
             return;
         }
         
+        console.log(`Found ${data.length} leaderboard entries`);
+        
+        // Create leaderboard HTML
         let html = '';
         data.forEach((entry, index) => {
             const rankClass = `leaderboard-place-${index + 1}`;
@@ -404,14 +470,20 @@ async function loadLeaderboard() {
         });
         
         leaderboardList.innerHTML = html;
+        
     } catch (error) {
         console.error('Error loading leaderboard:', error);
-        leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Terjadi kesalahan</div>';
+        leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Terjadi kesalahan saat memuat</div>';
     }
 }
 
 async function submitScoreToLeaderboard(level, timeSeconds) {
-    if (!currentUser || !leaderboardEnabled) return;
+    if (!currentUser || !leaderboardEnabled) {
+        console.log('Skipping leaderboard submission: user not logged in or leaderboard disabled');
+        return;
+    }
+    
+    console.log(`Submitting score for level ${level}: ${timeSeconds} seconds`);
     
     try {
         // Check if table exists first
@@ -420,7 +492,10 @@ async function submitScoreToLeaderboard(level, timeSeconds) {
             .select('id')
             .limit(1);
         
-        if (tableError) return;
+        if (tableError && tableError.message.includes('does not exist')) {
+            console.log(`Leaderboard table for level ${level} doesn't exist yet`);
+            return;
+        }
         
         // Check if user already has a score for this level
         const { data: existingScore, error: checkError } = await puzzleSupabase
@@ -431,7 +506,7 @@ async function submitScoreToLeaderboard(level, timeSeconds) {
         
         if (checkError && checkError.code === 'PGRST116') {
             // No existing score, insert new one
-            await puzzleSupabase
+            const { error: insertError } = await puzzleSupabase
                 .from(`leaderboard_level${level}`)
                 .insert([
                     {
@@ -441,15 +516,31 @@ async function submitScoreToLeaderboard(level, timeSeconds) {
                         completed_at: new Date().toISOString()
                     }
                 ]);
-        } else if (existingScore && timeSeconds < existingScore.time_seconds) {
+            
+            if (insertError) {
+                console.error('Error inserting score:', insertError);
+            } else {
+                console.log(`New score submitted to level ${level} leaderboard`);
+            }
+        } else if (existingScore) {
             // Update if new time is better
-            await puzzleSupabase
-                .from(`leaderboard_level${level}`)
-                .update({
-                    time_seconds: timeSeconds,
-                    completed_at: new Date().toISOString()
-                })
-                .eq('user_id', currentUser.id);
+            if (timeSeconds < existingScore.time_seconds) {
+                const { error: updateError } = await puzzleSupabase
+                    .from(`leaderboard_level${level}`)
+                    .update({
+                        time_seconds: timeSeconds,
+                        completed_at: new Date().toISOString()
+                    })
+                    .eq('user_id', currentUser.id);
+                
+                if (updateError) {
+                    console.error('Error updating score:', updateError);
+                } else {
+                    console.log(`Updated score for level ${level} leaderboard`);
+                }
+            } else {
+                console.log(`Current score ${existingScore.time_seconds}s is better than new score ${timeSeconds}s`);
+            }
         }
     } catch (error) {
         console.error('Error submitting score to leaderboard:', error);
