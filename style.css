@@ -788,3 +788,26 @@ input, textarea {
     -ms-user-select: text;
     user-select: text;
 }
+
+/* Debug styles */
+.debug-mode .btn {
+    border: 2px solid #00ff00 !important;
+}
+
+.debug-mode #menu {
+    border: 2px solid #ff0000 !important;
+}
+
+.debug-mode #levelMenu {
+    border: 2px solid #0000ff !important;
+}
+
+/* Click feedback */
+.btn:active {
+    transform: scale(0.95) !important;
+}
+
+/* Highlight active buttons */
+.btn:hover {
+    background: #444 !important;
+}
