@@ -2,31 +2,8 @@
 const SUPABASE_URL = 'https://bxhrnnwfqlsoviysqcdw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aHJubndmcWxzb3ZpeXNxY2R3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3ODkzNDIsImV4cCI6MjA4MTM2NTM0Mn0.O7fpv0TrDd-8ZE3Z9B5zWyAuWROPis5GRnKMxmqncX8';
 
-// Gunakan nama yang berbeda untuk menghindari konflik
-let supabaseClient;
-
-// DOM Elements
-const menu = document.getElementById("menu");
-const levelMenu = document.getElementById("levelMenu");
-const game = document.getElementById("game");
-const authContainer = document.getElementById("authContainer");
-const leaderboardContainer = document.getElementById("leaderboardContainer");
-const puzzle = document.getElementById("puzzle");
-const statusText = document.getElementById("status");
-const nextBtn = document.getElementById("nextBtn");
-const timeText = document.getElementById("time");
-const lvlText = document.getElementById("lvl");
-const gridSizeText = document.getElementById("gridSize");
-const levelGrid = document.getElementById("levels");
-const musicBtn = document.getElementById("musicBtn");
-const bgMusic = document.getElementById("bgMusic");
-const loginForm = document.getElementById("loginForm");
-const registerForm = document.getElementById("registerForm");
-const leaderboardList = document.getElementById("leaderboardList");
-const leaderboardLevelSelect = document.getElementById("leaderboardLevel");
-const currentUserElement = document.getElementById("currentUser");
-const gameUsernameElement = document.getElementById("gameUsername");
-const logoutBtn = document.getElementById("logoutBtn");
+// Buat Supabase client dengan nama unik
+const puzzleSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Game Variables
 let currentLevel = 1;
@@ -40,21 +17,7 @@ let leaderboardEnabled = true;
 
 // Initialize App
 async function init() {
-    console.log('Initializing app...');
-    
-    // Inisialisasi Supabase client dengan nama yang berbeda
-    try {
-        if (window.supabase && window.supabase.createClient) {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            console.log('Supabase client initialized as supabaseClient');
-        } else {
-            console.warn('Supabase library not loaded');
-            leaderboardEnabled = false;
-        }
-    } catch (error) {
-        console.error('Error initializing Supabase:', error);
-        leaderboardEnabled = false;
-    }
+    console.log('🚀 Initializing Bahlil Puzzle...');
     
     // Check saved data
     const saved = localStorage.getItem('puzzleCompletedLevels');
@@ -69,147 +32,91 @@ async function init() {
         updateUserUI();
     }
     
-    // Initialize leaderboard level select
-    if (leaderboardLevelSelect) {
-        for (let i = 1; i <= 12; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `Level ${i}`;
-            leaderboardLevelSelect.appendChild(option);
-        }
-    }
-    
-    createLevelButtons();
-    setupEventListeners();
+    // Setup event listeners untuk tombol
     setupButtonListeners();
     
     // Check database connection
     await checkDatabaseConnection();
     
-    // Prevent default touch behaviors
-    document.addEventListener('touchmove', function(e) {
-        if(e.target.closest('.level-grid')) return;
-        e.preventDefault();
-    }, { passive: false });
-    
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    
-    console.log('App initialized successfully');
+    console.log('✅ App initialized successfully');
 }
 
-// Setup button event listeners untuk menghandle onclick
+// Setup semua event listeners untuk tombol
 function setupButtonListeners() {
-    console.log('Setting up button listeners...');
+    console.log('🔗 Setting up button listeners...');
     
-    // Button: Mulai Game
-    const startBtn = document.querySelector('button[onclick*="openLevels"]');
-    if (startBtn) {
-        startBtn.onclick = openLevels;
-        console.log('Start button listener added');
-    }
+    // Main Menu Buttons
+    document.getElementById('startBtn')?.addEventListener('click', openLevels);
+    document.getElementById('leaderboardBtn')?.addEventListener('click', openLeaderboard);
     
-    // Button: Leaderboard
-    const leaderboardBtn = document.querySelector('button[onclick*="openLeaderboard"]');
-    if (leaderboardBtn) {
-        leaderboardBtn.onclick = openLeaderboard;
-        console.log('Leaderboard button listener added');
-    }
+    // Level Menu Buttons
+    document.getElementById('backToMenuBtn')?.addEventListener('click', backMenu);
     
-    // Button: Kembali ke Menu
-    const backBtns = document.querySelectorAll('button[onclick*="backMenu"]');
-    backBtns.forEach(btn => {
-        btn.onclick = backMenu;
+    // Auth Buttons
+    document.getElementById('loginBtn')?.addEventListener('click', login);
+    document.getElementById('registerBtn')?.addEventListener('click', register);
+    document.getElementById('showRegisterLink')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        showRegister();
     });
-    
-    // Button: Kembali ke Levels
-    const backToLevelsBtn = document.querySelector('button[onclick*="backToLevels"]');
-    if (backToLevelsBtn) {
-        backToLevelsBtn.onclick = backToLevels;
-    }
-    
-    // Button: Login
-    const loginBtn = document.querySelector('button[onclick*="login()"]');
-    if (loginBtn) {
-        loginBtn.onclick = login;
-    }
-    
-    // Button: Register
-    const registerBtn = document.querySelector('button[onclick*="register()"]');
-    if (registerBtn) {
-        registerBtn.onclick = register;
-    }
-    
-    // Button: Show Login Form
-    const showLoginLinks = document.querySelectorAll('a[onclick*="showLogin()"]');
-    showLoginLinks.forEach(link => {
-        link.onclick = function(e) {
-            e.preventDefault();
-            showLogin();
-        };
+    document.getElementById('showLoginLink')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        showLogin();
     });
+    document.getElementById('backFromAuthBtn')?.addEventListener('click', backMenu);
     
-    // Button: Show Register Form
-    const showRegisterLinks = document.querySelectorAll('a[onclick*="showRegister()"]');
-    showRegisterLinks.forEach(link => {
-        link.onclick = function(e) {
-            e.preventDefault();
-            showRegister();
-        };
-    });
+    // Leaderboard Buttons
+    document.getElementById('backFromLeaderboardBtn')?.addEventListener('click', backMenu);
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
     
-    // Button: Logout
-    if (logoutBtn) {
-        logoutBtn.onclick = logout;
-    }
+    // Game Buttons
+    document.getElementById('backToLevelsBtn')?.addEventListener('click', backToLevels);
+    document.getElementById('restartBtn')?.addEventListener('click', restartLevel);
+    document.getElementById('nextBtn')?.addEventListener('click', nextLevel);
     
-    // Button: Restart Level
-    const restartBtn = document.querySelector('button[onclick*="restartLevel()"]');
-    if (restartBtn) {
-        restartBtn.onclick = restartLevel;
-    }
+    // Music Button
+    document.getElementById('musicBtn')?.addEventListener('click', toggleMusic);
     
-    // Button: Next Level
-    if (nextBtn) {
-        nextBtn.onclick = nextLevel;
-    }
+    // Leaderboard Level Select
+    document.getElementById('leaderboardLevel')?.addEventListener('change', loadLeaderboard);
+    
+    console.log('✅ Button listeners setup complete');
 }
 
 // Check database connection
 async function checkDatabaseConnection() {
-    if (!supabaseClient || !leaderboardEnabled) return;
-    
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await puzzleSupabase
             .from('users')
             .select('count')
             .limit(1);
         
         if (error && error.message.includes('does not exist')) {
-            console.warn('Database tables not found. Leaderboard features disabled.');
+            console.warn('⚠️ Database tables not found. Leaderboard features disabled.');
             leaderboardEnabled = false;
-            // Hide leaderboard button if tables don't exist
-            const leaderboardBtn = document.querySelector('button[onclick*="openLeaderboard"]');
-            if (leaderboardBtn) {
-                leaderboardBtn.style.display = 'none';
-            }
+            // Hide leaderboard button
+            const leaderboardBtn = document.getElementById('leaderboardBtn');
+            if (leaderboardBtn) leaderboardBtn.style.display = 'none';
         } else {
-            console.log('Database connection successful');
+            console.log('✅ Database connection successful');
             leaderboardEnabled = true;
         }
     } catch (error) {
-        console.error('Error checking database connection:', error);
+        console.error('❌ Error checking database connection:', error);
         leaderboardEnabled = false;
     }
 }
 
-// UI Functions
+// ========== UI FUNCTIONS ==========
 function createLevelButtons() {
+    const levelGrid = document.getElementById('levels');
     if (!levelGrid) return;
     
     levelGrid.innerHTML = '';
     for(let i = 1; i <= 12; i++) {
         const btn = document.createElement("button");
         btn.className = "level-btn";
+        btn.id = `levelBtn${i}`;
         
         let iconClass = "fas fa-star";
         if (i <= 3) iconClass = "fas fa-chess-pawn";
@@ -224,102 +131,77 @@ function createLevelButtons() {
             btn.innerHTML += `<br><small style="color:#888;font-size:11px;">Selesai</small>`;
         }
         
-        btn.onclick = () => startLevel(i);
+        btn.addEventListener('click', () => startLevel(i));
         levelGrid.appendChild(btn);
     }
 }
 
-function setupEventListeners() {
-    if (musicBtn) {
-        musicBtn.addEventListener('click', toggleMusic);
-    }
-    if (bgMusic) {
-        bgMusic.volume = 0.5;
-    }
-    
-    // Add event listener for leaderboard level select
-    if (leaderboardLevelSelect) {
-        leaderboardLevelSelect.addEventListener('change', loadLeaderboard);
-    }
-}
-
-function toggleMusic() {
-    musicEnabled = !musicEnabled;
-    
-    if (musicEnabled) {
-        bgMusic.play().catch(e => console.log("Autoplay prevented:", e));
-        musicBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-        musicBtn.classList.remove('off');
-    } else {
-        bgMusic.pause();
-        musicBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-        musicBtn.classList.add('off');
-    }
-}
-
 function updateUserUI() {
+    const currentUserElement = document.getElementById('currentUser');
+    const gameUsernameElement = document.getElementById('gameUsername');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
     if (currentUser) {
-        currentUserElement.textContent = currentUser.username;
-        gameUsernameElement.textContent = currentUser.username;
-        logoutBtn.classList.remove('hidden');
+        if (currentUserElement) currentUserElement.textContent = currentUser.username;
+        if (gameUsernameElement) gameUsernameElement.textContent = currentUser.username;
+        if (logoutBtn) logoutBtn.classList.remove('hidden');
     } else {
-        currentUserElement.textContent = 'Guest';
-        gameUsernameElement.textContent = 'Guest';
-        logoutBtn.classList.add('hidden');
+        if (currentUserElement) currentUserElement.textContent = 'Guest';
+        if (gameUsernameElement) gameUsernameElement.textContent = 'Guest';
+        if (logoutBtn) logoutBtn.classList.add('hidden');
     }
 }
 
-// Navigation Functions
+// ========== NAVIGATION FUNCTIONS ==========
 function openLevels() {
-    console.log('Opening levels...');
-    if (menu) menu.classList.add("hidden");
-    if (levelMenu) levelMenu.classList.remove("hidden");
-    
-    document.querySelectorAll(".level-btn").forEach((btn, index) => {
-        btn.classList.remove("current");
-        if (index + 1 === currentLevel) {
-            btn.classList.add("current");
-        }
-    });
+    console.log('🎮 Opening levels menu...');
+    document.getElementById('menu')?.classList.add("hidden");
+    document.getElementById('levelMenu')?.classList.remove("hidden");
+    createLevelButtons();
 }
 
 function backMenu() {
-    console.log('Going back to menu...');
-    if (levelMenu) levelMenu.classList.add("hidden");
-    if (game) game.classList.add("hidden");
-    if (authContainer) authContainer.classList.add("hidden");
-    if (leaderboardContainer) leaderboardContainer.classList.add("hidden");
-    if (menu) menu.classList.remove("hidden");
+    console.log('🔙 Going back to main menu...');
+    document.getElementById('levelMenu')?.classList.add("hidden");
+    document.getElementById('game')?.classList.add("hidden");
+    document.getElementById('authContainer')?.classList.add("hidden");
+    document.getElementById('leaderboardContainer')?.classList.add("hidden");
+    document.getElementById('menu')?.classList.remove("hidden");
 }
 
 function backToLevels() {
-    console.log('Going back to levels...');
+    console.log('📋 Going back to level selection...');
     clearInterval(interval);
-    if (game) game.classList.add("hidden");
-    if (levelMenu) levelMenu.classList.remove("hidden");
+    document.getElementById('game')?.classList.add("hidden");
+    document.getElementById('levelMenu')?.classList.remove("hidden");
     createLevelButtons();
 }
 
 function openLeaderboard() {
-    console.log('Opening leaderboard...');
+    console.log('🏆 Opening leaderboard...');
     if (!currentUser) {
         // Show login/register first
-        if (menu) menu.classList.add("hidden");
-        if (authContainer) authContainer.classList.remove("hidden");
+        document.getElementById('menu')?.classList.add("hidden");
+        document.getElementById('authContainer')?.classList.remove("hidden");
         showLogin();
-    } else {
-        if (!leaderboardEnabled) {
-            alert('Fitur leaderboard sedang tidak tersedia. Database belum diatur.');
-            return;
-        }
-        if (menu) menu.classList.add("hidden");
-        if (leaderboardContainer) leaderboardContainer.classList.remove("hidden");
-        loadLeaderboard();
+        return;
     }
+    
+    if (!leaderboardEnabled) {
+        alert('Fitur leaderboard sedang tidak tersedia. Database belum diatur.');
+        return;
+    }
+    
+    document.getElementById('menu')?.classList.add("hidden");
+    document.getElementById('leaderboardContainer')?.classList.remove("hidden");
+    loadLeaderboard();
 }
 
-// Auth Functions
+// ========== AUTH FUNCTIONS ==========
 function showLogin() {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    
     if (loginForm) loginForm.classList.remove("hidden");
     if (registerForm) registerForm.classList.add("hidden");
     
@@ -331,6 +213,9 @@ function showLogin() {
 }
 
 function showRegister() {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    
     if (loginForm) loginForm.classList.add("hidden");
     if (registerForm) registerForm.classList.remove("hidden");
     
@@ -353,8 +238,7 @@ async function login() {
     }
     
     try {
-        // Query user from Supabase
-        const { data, error } = await supabaseClient
+        const { data, error } = await puzzleSupabase
             .from('users')
             .select('*')
             .eq('username', username)
@@ -380,8 +264,8 @@ async function login() {
             localStorage.setItem('puzzleUser', JSON.stringify(currentUser));
             updateUserUI();
             
-            if (authContainer) authContainer.classList.add("hidden");
-            if (leaderboardContainer) leaderboardContainer.classList.remove("hidden");
+            document.getElementById('authContainer')?.classList.add("hidden");
+            document.getElementById('leaderboardContainer')?.classList.remove("hidden");
             loadLeaderboard();
         }
     } catch (error) {
@@ -417,7 +301,7 @@ async function register() {
     
     try {
         // Check if username already exists
-        const { data: existingUser, error: checkError } = await supabaseClient
+        const { data: existingUser, error: checkError } = await puzzleSupabase
             .from('users')
             .select('*')
             .eq('username', username)
@@ -429,7 +313,7 @@ async function register() {
         }
         
         // Insert new user
-        const { data, error } = await supabaseClient
+        const { data, error } = await puzzleSupabase
             .from('users')
             .insert([
                 {
@@ -457,8 +341,8 @@ async function register() {
             updateUserUI();
             
             alert("Pendaftaran berhasil! Anda telah login otomatis.");
-            if (authContainer) authContainer.classList.add("hidden");
-            if (leaderboardContainer) leaderboardContainer.classList.remove("hidden");
+            document.getElementById('authContainer')?.classList.add("hidden");
+            document.getElementById('leaderboardContainer')?.classList.remove("hidden");
             loadLeaderboard();
         }
     } catch (error) {
@@ -475,18 +359,20 @@ function logout() {
     showLogin();
 }
 
-// Leaderboard Functions
+// ========== LEADERBOARD FUNCTIONS ==========
 async function loadLeaderboard() {
+    const leaderboardLevelSelect = document.getElementById('leaderboardLevel');
+    const leaderboardList = document.getElementById('leaderboardList');
+    
     if (!leaderboardLevelSelect || !leaderboardList) return;
     
     const level = leaderboardLevelSelect.value;
-    
     if (!level) return;
     
     leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">Memuat leaderboard...</div>';
     
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await puzzleSupabase
             .from(`leaderboard_level${level}`)
             .select('*')
             .order('time_seconds', { ascending: true })
@@ -494,11 +380,7 @@ async function loadLeaderboard() {
         
         if (error) {
             console.error('Error loading leaderboard:', error);
-            if (error.message.includes('does not exist')) {
-                leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Leaderboard untuk level ini belum tersedia</div>';
-            } else {
-                leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Gagal memuat leaderboard</div>';
-            }
+            leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff6b6b;">Gagal memuat leaderboard</div>';
             return;
         }
         
@@ -529,30 +411,19 @@ async function loadLeaderboard() {
 }
 
 async function submitScoreToLeaderboard(level, timeSeconds) {
-    if (!currentUser) {
-        console.log('User not logged in, score not saved to leaderboard');
-        return;
-    }
-    
-    if (!leaderboardEnabled) {
-        console.log('Leaderboard disabled');
-        return;
-    }
+    if (!currentUser || !leaderboardEnabled) return;
     
     try {
         // Check if table exists first
-        const { error: tableError } = await supabaseClient
+        const { error: tableError } = await puzzleSupabase
             .from(`leaderboard_level${level}`)
             .select('id')
             .limit(1);
         
-        if (tableError && tableError.message.includes('does not exist')) {
-            console.warn(`Leaderboard table for level ${level} does not exist`);
-            return;
-        }
+        if (tableError) return;
         
         // Check if user already has a score for this level
-        const { data: existingScore, error: checkError } = await supabaseClient
+        const { data: existingScore, error: checkError } = await puzzleSupabase
             .from(`leaderboard_level${level}`)
             .select('*')
             .eq('user_id', currentUser.id)
@@ -560,7 +431,7 @@ async function submitScoreToLeaderboard(level, timeSeconds) {
         
         if (checkError && checkError.code === 'PGRST116') {
             // No existing score, insert new one
-            const { error: insertError } = await supabaseClient
+            await puzzleSupabase
                 .from(`leaderboard_level${level}`)
                 .insert([
                     {
@@ -570,52 +441,61 @@ async function submitScoreToLeaderboard(level, timeSeconds) {
                         completed_at: new Date().toISOString()
                     }
                 ]);
-            
-            if (insertError) {
-                console.error('Error inserting score:', insertError);
-            } else {
-                console.log(`New score submitted to level ${level} leaderboard`);
-            }
-        } else if (existingScore) {
+        } else if (existingScore && timeSeconds < existingScore.time_seconds) {
             // Update if new time is better
-            if (timeSeconds < existingScore.time_seconds) {
-                const { error: updateError } = await supabaseClient
-                    .from(`leaderboard_level${level}`)
-                    .update({
-                        time_seconds: timeSeconds,
-                        completed_at: new Date().toISOString()
-                    })
-                    .eq('user_id', currentUser.id);
-                
-                if (updateError) {
-                    console.error('Error updating score:', updateError);
-                } else {
-                    console.log(`Updated score for level ${level} leaderboard`);
-                }
-            } else {
-                console.log(`Current score ${existingScore.time_seconds}s is better than new score ${timeSeconds}s`);
-            }
+            await puzzleSupabase
+                .from(`leaderboard_level${level}`)
+                .update({
+                    time_seconds: timeSeconds,
+                    completed_at: new Date().toISOString()
+                })
+                .eq('user_id', currentUser.id);
         }
     } catch (error) {
         console.error('Error submitting score to leaderboard:', error);
     }
 }
 
-// Game Functions
+// ========== GAME FUNCTIONS ==========
+function toggleMusic() {
+    const musicBtn = document.getElementById('musicBtn');
+    const bgMusic = document.getElementById('bgMusic');
+    
+    musicEnabled = !musicEnabled;
+    
+    if (musicEnabled) {
+        bgMusic.play().catch(e => console.log("Autoplay prevented:", e));
+        musicBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        musicBtn.classList.remove('off');
+    } else {
+        bgMusic.pause();
+        musicBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+        musicBtn.classList.add('off');
+    }
+}
+
 function restartLevel() {
     startLevel(currentLevel);
 }
 
 function startLevel(lvl) {
+    console.log(`🎯 Starting level ${lvl}...`);
     currentLevel = lvl;
     
+    // Set grid size based on level
     if (lvl <= 3) grid = 3;
     else if (lvl <= 7) grid = 4;
     else if (lvl <= 10) grid = 5;
     else grid = 6;
     
-    if (levelMenu) levelMenu.classList.add("hidden");
-    if (game) game.classList.remove("hidden");
+    // Update UI
+    document.getElementById('levelMenu')?.classList.add("hidden");
+    document.getElementById('game')?.classList.remove("hidden");
+    
+    const lvlText = document.getElementById('lvl');
+    const gridSizeText = document.getElementById('gridSize');
+    const nextBtn = document.getElementById('nextBtn');
+    const statusText = document.getElementById('status');
     
     if (lvlText) lvlText.textContent = lvl;
     if (gridSizeText) gridSizeText.textContent = `${grid}x${grid}`;
@@ -632,6 +512,7 @@ function startLevel(lvl) {
 function startTimer() {
     clearInterval(interval);
     timer = 0;
+    const timeText = document.getElementById('time');
     if (timeText) timeText.textContent = 0;
     
     interval = setInterval(() => {
@@ -641,6 +522,7 @@ function startTimer() {
 }
 
 function loadPuzzle(img, grid) {
+    const puzzle = document.getElementById('puzzle');
     if (!puzzle) return;
     
     puzzle.innerHTML = "";
@@ -692,6 +574,7 @@ function dragEvents() {
             
             if(dragged && dragged !== piece) {
                 const nextSibling = dragged.nextSibling === piece ? dragged : dragged.nextSibling;
+                const puzzle = document.getElementById('puzzle');
                 puzzle.insertBefore(dragged, piece);
                 puzzle.insertBefore(piece, nextSibling);
                 
@@ -699,15 +582,14 @@ function dragEvents() {
             }
         });
         
+        // Touch events for mobile
         piece.addEventListener('touchstart', handleTouchStart);
         piece.addEventListener('touchmove', handleTouchMove);
         piece.addEventListener('touchend', handleTouchEnd);
     });
 }
 
-let touchStartX = 0;
-let touchStartY = 0;
-let touchedPiece = null;
+let touchStartX = 0, touchStartY = 0, touchedPiece = null;
 
 function handleTouchStart(e) {
     e.preventDefault();
@@ -729,6 +611,7 @@ function handleTouchMove(e) {
     
     if (targetPiece) {
         const nextSibling = touchedPiece.nextSibling === targetPiece ? touchedPiece : touchedPiece.nextSibling;
+        const puzzle = document.getElementById('puzzle');
         puzzle.insertBefore(touchedPiece, targetPiece);
         puzzle.insertBefore(targetPiece, nextSibling);
         
@@ -745,11 +628,15 @@ function handleTouchEnd(e) {
 }
 
 function checkWin() {
+    const puzzle = document.getElementById('puzzle');
     const pieces = [...puzzle.children];
     const isSolved = pieces.every((piece, index) => piece.dataset.correct == index);
     
     if(isSolved) {
         clearInterval(interval);
+        const statusText = document.getElementById('status');
+        const nextBtn = document.getElementById('nextBtn');
+        
         if (statusText) {
             statusText.textContent = `🎉 Terselesaikan dalam ${timer} detik!`;
             statusText.className = "status-success";
@@ -758,7 +645,7 @@ function checkWin() {
         completedLevels.add(currentLevel);
         localStorage.setItem('puzzleCompletedLevels', JSON.stringify([...completedLevels]));
         
-        // Submit score to leaderboard if logged in
+        // Submit score to leaderboard
         if (currentUser) {
             submitScoreToLeaderboard(currentLevel, timer);
         }
@@ -779,10 +666,12 @@ function checkWin() {
 }
 
 function nextLevel() {
+    const nextBtn = document.getElementById('nextBtn');
     if (nextBtn) nextBtn.classList.remove("pulse");
     startLevel(currentLevel + 1);
 }
 
+// ========== UTILITY FUNCTIONS ==========
 function shuffle(arr) {
     for(let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -796,16 +685,12 @@ function formatTime(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-// Initialize app
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    // DOM sudah siap, langsung init
-    setTimeout(init, 100);
-}
+// ========== INITIALIZE APP ==========
+document.addEventListener('DOMContentLoaded', init);
 
 // Handle window resize
 window.addEventListener('resize', () => {
+    const game = document.getElementById('game');
     if (game && !game.classList.contains('hidden')) {
         loadPuzzle(`foto${currentLevel}.webp`, grid);
     }
